@@ -1,1 +1,1 @@
-include ':example', ':tickerview'
+include ':sample', ':tickerview'

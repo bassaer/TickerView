@@ -6,9 +6,7 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 
 
 /**
@@ -37,7 +35,6 @@ class TickerTextView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
         paint = Paint()
     }
 
-    @Synchronized
     fun draw(X: Float, Y: Float) {
         val canvas = surfaceHolder.lockCanvas()
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
@@ -54,9 +51,8 @@ class TickerTextView(context: Context) : SurfaceView(context), SurfaceHolder.Cal
     }
 
     override fun surfaceCreated(holder: SurfaceHolder?) {
-        scheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
-        scheduledExecutorService.scheduleAtFixedRate(
-                TickerThread(), 1000, 10, TimeUnit.MILLISECONDS)
+
+
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
