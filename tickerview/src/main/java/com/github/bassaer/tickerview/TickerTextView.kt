@@ -8,10 +8,10 @@ import android.graphics.PixelFormat
 import android.graphics.PorterDuff
 import android.util.AttributeSet
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-
-
+import kotlinx.coroutines.experimental.launch
 
 
 /**
@@ -49,7 +49,25 @@ class TickerTextView(context: Context, attrs: AttributeSet) : SurfaceView(contex
     }
 
     override fun surfaceCreated(holder: SurfaceHolder?) {
-        draw(currentPosition, textHeight)
+        launch {
+            Log.d(javaClass.name, "launch start whole : " + wholeTextWidth)
+            while (true) {
+                Log.d(javaClass.name, "start curPos: " + currentPosition)
+                draw(viewWidth - currentPosition, textHeight)
+                currentPosition += speed
+                if (currentPosition > wholeTextWidth) {
+                    Log.d(javaClass.name, "scrolling")
+                    currentPosition = 0f
+                    --scrollTime
+                }
+                if (scrollTime <= 0) {
+                    Log.d(javaClass.name, "breaking")
+                    break
+                }
+                Log.d(javaClass.name, "end")
+            }
+            Log.d(javaClass.name, "launch end curPos: " + currentPosition)
+        }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
