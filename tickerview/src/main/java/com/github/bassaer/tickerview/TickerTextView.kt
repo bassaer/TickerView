@@ -8,7 +8,6 @@ import android.graphics.PixelFormat
 import android.graphics.PorterDuff
 import android.util.AttributeSet
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.SurfaceHolder
 import android.view.SurfaceView
 import kotlinx.coroutines.experimental.launch
@@ -21,7 +20,7 @@ import kotlinx.coroutines.experimental.launch
 class TickerTextView(context: Context, attrs: AttributeSet) : SurfaceView(context, attrs), SurfaceHolder.Callback {
 
     private var surfaceHolder = holder
-    private val speed = 1
+    private val speed = 4
     private var viewWidth = 0
     private var viewHeight = 0
     private var paint = Paint()
@@ -32,9 +31,22 @@ class TickerTextView(context: Context, attrs: AttributeSet) : SurfaceView(contex
     private var textHeight = 0f
     private var currentPosition = 0f
     private var scrollTime = 10
-    private var density = 1f
+    private var isDrawing = false
 
-    fun draw(x: Float, y: Float) {
+    init {
+        surfaceHolder = holder
+        surfaceHolder.addCallback(this)
+        paint = Paint()
+        paint.color = Color.BLACK
+        textSize = context.resources.getDimensionPixelSize(R.dimen.text_size)
+        paint.textSize = textSize.toFloat()
+        setZOrderOnTop(true)
+        holder.setFormat(PixelFormat.TRANSLUCENT)
+
+        isFocusable = true
+        isDrawing = true
+    }
+    private fun draw(x: Float, y: Float) {
         val canvas = surfaceHolder.lockCanvas()
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
         canvas.drawText(text, x, y, paint)
@@ -46,27 +58,22 @@ class TickerTextView(context: Context, attrs: AttributeSet) : SurfaceView(contex
 
 
     override fun surfaceDestroyed(holder: SurfaceHolder?) {
+        isDrawing = false
     }
 
     override fun surfaceCreated(holder: SurfaceHolder?) {
         launch {
-            Log.d(javaClass.name, "launch start whole : " + wholeTextWidth)
-            while (true) {
-                Log.d(javaClass.name, "start curPos: " + currentPosition)
+            while (isDrawing) {
                 draw(viewWidth - currentPosition, textHeight)
                 currentPosition += speed
                 if (currentPosition > wholeTextWidth) {
-                    Log.d(javaClass.name, "scrolling")
                     currentPosition = 0f
                     --scrollTime
                 }
                 if (scrollTime <= 0) {
-                    Log.d(javaClass.name, "breaking")
-                    break
+                    isDrawing = false
                 }
-                Log.d(javaClass.name, "end")
             }
-            Log.d(javaClass.name, "launch end curPos: " + currentPosition)
         }
     }
 
@@ -76,7 +83,9 @@ class TickerTextView(context: Context, attrs: AttributeSet) : SurfaceView(contex
         viewHeight = MeasureSpec.getSize(heightMeasureSpec)
         textWidth = paint.measureText(text)
         wholeTextWidth = viewWidth + textWidth
-        textHeight = (viewHeight + getFontHeight(textSize.toFloat()/ density)) / 2 + paddingTop - paddingBottom + 2
+
+        textHeight = getFontHeight(textSize.toFloat())
+        setMeasuredDimension(viewWidth, textHeight.toInt())
 
     }
 
@@ -84,23 +93,14 @@ class TickerTextView(context: Context, attrs: AttributeSet) : SurfaceView(contex
         val paint = Paint()
         paint.textSize = fontSize
         val metrics = paint.fontMetrics
-        return Math.ceil(metrics.descent.toDouble() - metrics.ascent.toDouble()).toFloat()
+        return Math.ceil(metrics.descent.toDouble() + metrics.ascent.toDouble()).toFloat() / 2
     }
 
-
-    init {
-        surfaceHolder = holder
-        surfaceHolder.addCallback(this)
-        paint = Paint()
-        paint.color = Color.BLACK
-        textSize = context.resources.getDimensionPixelSize(R.dimen.text_size)
-        paint.textSize = textSize.toFloat()
-        setZOrderOnTop(true)
-        holder.setFormat(PixelFormat.TRANSLUCENT)
-        val metric = DisplayMetrics()
-        (context as Activity).windowManager.defaultDisplay.getMetrics(metric)
-        density = metric.density
-        isFocusable = true
+    private fun spToDp(sp: Float): Int {
+        val metrics = DisplayMetrics()
+        (context as Activity).windowManager.defaultDisplay.getMetrics(metrics)
+        val density = resources.displayMetrics.density
+        return (sp * metrics.scaledDensity / density).toInt()
     }
 
 }
