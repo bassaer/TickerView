@@ -1,4 +1,4 @@
-package com.github.bassaer.tickerview
+package com.github.bassaer.sample
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
